@@ -250,6 +250,54 @@
 
   <script>
     (function () {
+      function imageCandidates(src) {
+        if (!src || src.indexOf('data:') === 0 || /^(https?:)?\/\//i.test(src)) {
+          return [src];
+        }
+        var clean = src.replace(/^\.\//, '');
+        var name = clean.replace(/^.*\//, '');
+        var out = [];
+        function add(u) {
+          if (u && out.indexOf(u) === -1) out.push(u);
+        }
+        add(src);
+        add(clean);
+        add('./' + clean);
+        add('assets/' + name);
+        add('Assets/' + name);
+        add('ASSETS/' + name);
+        add('./assets/' + name);
+        add('./Assets/' + name);
+        add('images/' + name);
+        add('./images/' + name);
+        add('img/' + name);
+        add('./img/' + name);
+        add(name);
+        add('./' + name);
+        return out;
+      }
+
+      function attachImageFallback(img) {
+        var initial = img.getAttribute('src');
+        if (!initial) return;
+        var list = imageCandidates(initial);
+        if (list.length <= 1) return;
+        var idx = 0;
+        function onImgErr() {
+          idx += 1;
+          if (idx < list.length) {
+            img.src = list[idx];
+          } else {
+            img.removeEventListener('error', onImgErr);
+          }
+        }
+        img.addEventListener('error', onImgErr);
+      }
+
+      document.querySelectorAll('img[src]').forEach(attachImageFallback);
+    })();
+
+    (function () {
       var panel = document.getElementById('sentence-panel');
       var sentenceEl = document.getElementById('text-sentence');
       var closeBtn = document.getElementById('panel-close');
